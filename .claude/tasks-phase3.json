@@ -1,0 +1,116 @@
+{
+  "version": "2.0",
+  "project": "ai-ide",
+  "phase": "phase3",
+  "created_at": "2026-04-01T12:00:00Z",
+  "tasks": [
+    {
+      "id": "P3-T1",
+      "title": "流式响应UI - 打字机效果",
+      "description": "实现AI流式响应的逐字显示效果，支持Markdown和代码块高亮",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "SSE流式响应连接",
+        "逐字打字机效果",
+        "Markdown渲染",
+        "代码块语法高亮",
+        "平滑滚动"
+      ],
+      "estimated_effort": "3h"
+    },
+    {
+      "id": "P3-T2",
+      "title": "Diff预览界面",
+      "description": "实现代码变更的Diff预览，支持行级对比",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": ["P3-T1"],
+      "acceptance_criteria": [
+        "Unified Diff显示",
+        "行级高亮（增删改）",
+        "语法高亮保持",
+        "文件名显示",
+        "统计信息（+/-行数）"
+      ],
+      "estimated_effort": "3h"
+    },
+    {
+      "id": "P3-T3",
+      "title": "AI代码变更应用流程",
+      "description": "完整的代码生成→预览→确认→应用→运行流程",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": ["P3-T2"],
+      "acceptance_criteria": [
+        "AI解析代码变更",
+        "Diff预览弹窗",
+        "确认/拒绝按钮",
+        "自动应用到文件",
+        "运行验证"
+      ],
+      "estimated_effort": "4h"
+    },
+    {
+      "id": "P3-T4",
+      "title": "多范式切换UI",
+      "description": "Vibe/Spec/Harness三种编程范式的切换界面",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "范式选择器UI",
+        "不同范式提示词模板",
+        "范式状态持久化",
+        "快捷切换"
+      ],
+      "estimated_effort": "2h"
+    },
+    {
+      "id": "P3-T5",
+      "title": "会话历史管理",
+      "description": "保存和恢复AI对话历史",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "会话自动保存",
+        "历史列表展示",
+        "恢复历史会话",
+        "导出对话记录"
+      ],
+      "estimated_effort": "2h"
+    },
+    {
+      "id": "P3-T6",
+      "title": "Rust单元测试",
+      "description": "为核心模块添加单元测试",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "runtime模块测试",
+        "config模块测试",
+        "sandbox模块测试",
+        "测试覆盖率>60%"
+      ],
+      "estimated_effort": "3h"
+    },
+    {
+      "id": "P3-T7",
+      "title": "性能优化",
+      "description": "大文件处理和虚拟滚动优化",
+      "status": "pending",
+      "priority": "low",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "大文件虚拟滚动",
+        "代码分割",
+        "懒加载",
+        "内存优化"
+      ],
+      "estimated_effort": "3h"
+    }
+  ]
+}

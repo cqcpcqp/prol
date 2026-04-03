@@ -1,0 +1,142 @@
+{
+  "version": "1.0",
+  "project": "ai-ide",
+  "created_at": "2026-03-30T10:00:00Z",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "初始化Tauri项目骨架",
+      "description": "创建Tauri v2项目，配置React前端，建立基础目录结构",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "Tauri项目成功创建",
+        "React + TypeScript配置完成",
+        "开发服务器能正常启动",
+        "基础窗口配置完成"
+      ],
+      "estimated_effort": "1h"
+    },
+    {
+      "id": "T2",
+      "title": "实现三栏Warp风格UI",
+      "description": "实现左侧文件树、中间代码展示、右侧AI对话的三栏布局",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": ["T1"],
+      "acceptance_criteria": [
+        "三栏布局正确显示",
+        "栏宽可调整",
+        "响应式适配",
+        "基础样式符合Warp风格"
+      ],
+      "estimated_effort": "2h"
+    },
+    {
+      "id": "T3",
+      "title": "集成Shiki代码高亮",
+      "description": "使用Shiki实现代码只读展示，支持语法高亮",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": ["T2"],
+      "acceptance_criteria": [
+        "Shiki正确集成",
+        "支持Python/JS/TS/Rust高亮",
+        "代码只读不可编辑",
+        "显示行号"
+      ],
+      "estimated_effort": "1.5h"
+    },
+    {
+      "id": "T4",
+      "title": "实现文件树组件",
+      "description": "实现左侧文件目录树，支持点击打开文件",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": ["T2"],
+      "acceptance_criteria": [
+        "递归显示目录结构",
+        "点击文件在中间展示",
+        "文件夹可展开折叠",
+        "支持新建文件/文件夹"
+      ],
+      "estimated_effort": "2h"
+    },
+    {
+      "id": "T5",
+      "title": "实现运行时管理器",
+      "description": "Rust后端实现运行时下载、安装、虚拟环境管理",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": ["T1"],
+      "acceptance_criteria": [
+        "Python运行时下载安装",
+        "Node运行时下载安装",
+        "虚拟环境自动创建",
+        "运行时信息持久化存储"
+      ],
+      "estimated_effort": "4h"
+    },
+    {
+      "id": "T6",
+      "title": "实现沙箱执行器",
+      "description": "实现隔离的代码执行环境，确保零本机污染",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": ["T5"],
+      "acceptance_criteria": [
+        "PATH完全隔离",
+        "使用项目虚拟环境",
+        "资源限制（内存/时间）",
+        "输出捕获"
+      ],
+      "estimated_effort": "3h"
+    },
+    {
+      "id": "T7",
+      "title": "实现AI对话终端",
+      "description": "右侧实现类终端的AI对话界面",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": ["T2"],
+      "acceptance_criteria": [
+        "终端风格UI",
+        "消息历史显示",
+        "输入框支持多行",
+        "代码块渲染"
+      ],
+      "estimated_effort": "2h"
+    },
+    {
+      "id": "T8",
+      "title": "集成LLM客户端",
+      "description": "实现LLM API调用，支持多模型",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": ["T7"],
+      "acceptance_criteria": [
+        "支持OpenAI API",
+        "支持Anthropic API",
+        "流式响应",
+        "错误处理"
+      ],
+      "estimated_effort": "2h"
+    },
+    {
+      "id": "T9",
+      "title": "实现AI代码生成工作流",
+      "description": "AI生成代码→预览→应用→运行的完整流程",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": ["T6", "T8"],
+      "acceptance_criteria": [
+        "AI生成代码变更",
+        "Diff预览",
+        "用户确认应用",
+        "自动运行展示结果"
+      ],
+      "estimated_effort": "3h"
+    }
+  ]
+}

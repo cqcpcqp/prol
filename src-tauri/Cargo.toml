@@ -1,0 +1,46 @@
+[package]
+name = "ai-ide"
+version = "1.0.0"
+description = "AI原生IDE - 面向产品经理的零配置开发环境"
+edition = "2021"
+rust-version = "1.75"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0", features = [] }
+tauri-plugin-shell = "2.0.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
+dirs = "5.0"
+anyhow = "1.0"
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+bytes = "1.0"
+
+# Async
+async-trait = "0.1"
+futures = "0.3"
+async-stream = "0.3"
+
+# Archive handling
+tar = "0.4"
+flate2 = "1.0"
+zip = "2.0"
+
+# Logging
+log = "0.4"
+
+# Configuration
+config = "0.14"
+toml = "0.8"
+
+# Retries
+backoff = { version = "0.4", features = ["tokio"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
