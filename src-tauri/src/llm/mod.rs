@@ -21,6 +21,7 @@ impl Provider {
         }
     }
 
+    #[allow(dead_code)]
     pub fn default_api_url(&self) -> String {
         match self {
             Provider::OpenAI => "https://api.openai.com/v1".to_string(),
@@ -93,6 +94,7 @@ impl ChatRequest {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_model(mut self, model: impl Into<String>) -> Self {
         self.model = model.into();
         self
@@ -103,6 +105,7 @@ impl ChatRequest {
         self
     }
 
+    #[allow(dead_code)]
     pub fn with_max_tokens(mut self, tokens: u32) -> Self {
         self.max_tokens = Some(tokens);
         self
@@ -280,6 +283,7 @@ impl AnthropicClient {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_base_url(mut self, url: impl Into<String>) -> Self {
         self.base_url = url.into();
         self

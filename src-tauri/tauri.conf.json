@@ -12,7 +12,18 @@
   },
   "app": {
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": [
+        {
+          "identifier": "default",
+          "description": "Default permissions for the application",
+          "windows": ["main"],
+          "permissions": [
+            "core:default",
+            "dialog:allow-open"
+          ]
+        }
+      ]
     },
     "windows": [
       {

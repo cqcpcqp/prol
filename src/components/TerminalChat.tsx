@@ -35,8 +35,14 @@ interface Paradigm {
 }
 
 // 代码块解析
-const parseCodeBlocks = (content: string) => {
-  const blocks: Array<{ type: 'text' | 'code'; content: string; language?: string }> = [];
+interface CodeBlockType {
+  type: 'text' | 'code';
+  content: string;
+  language?: string;
+}
+
+const parseCodeBlocks = (content: string): CodeBlockType[] => {
+  const blocks: CodeBlockType[] = [];
   const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
   let lastIndex = 0;
   let match;
@@ -71,9 +77,25 @@ const parseCodeBlocks = (content: string) => {
   return blocks.length > 0 ? blocks : [{ type: 'text', content }];
 };
 
+interface CodeBlockProps {
+  code: string;
+  language: string;
+  suggestedPath?: string | null;
+  onApplyChange?: (filePath: string, content: string) => void;
+  projectPath?: string;
+}
+
 // 代码块组件
-const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, language }) => {
+const CodeBlock: React.FC<CodeBlockProps> = ({
+  code,
+  language,
+  suggestedPath,
+  onApplyChange,
+  projectPath,
+}) => {
   const [highlighted, setHighlighted] = useState('');
+  const [customPath, setCustomPath] = useState('');
+  const [showApply, setShowApply] = useState(false);
 
   useEffect(() => {
     codeToHtml(code, {
@@ -82,10 +104,33 @@ const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, languag
     }).then(setHighlighted);
   }, [code, language]);
 
+  const handleApply = () => {
+    const filePath = customPath || suggestedPath;
+    if (filePath && onApplyChange) {
+      // 确保路径是绝对的
+      const fullPath = filePath.startsWith('/') || filePath.includes(':\\')
+        ? filePath
+        : `${projectPath}/${filePath}`;
+      onApplyChange(fullPath, code);
+    }
+  };
+
+  const displayPath = suggestedPath || customPath;
+
   return (
     <div className="my-2 rounded-lg overflow-hidden bg-[#0d1117] border border-[#30363d]">
       <div className="flex items-center justify-between px-3 py-1.5 bg-[#161b22] border-b border-[#30363d]">
-        <span className="text-xs text-gray-400">{language}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">{language}</span>
+          {onApplyChange && (
+            <button
+              onClick={() => setShowApply(!showApply)}
+              className="text-xs text-blue-400 hover:text-blue-300"
+            >
+              {showApply ? '取消' : '应用'}
+            </button>
+          )}
+        </div>
         <button
           onClick={() => navigator.clipboard.writeText(code)}
           className="text-xs text-gray-500 hover:text-gray-300"
@@ -93,6 +138,31 @@ const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, languag
           复制
         </button>
       </div>
+
+      {showApply && onApplyChange && (
+        <div className="px-3 py-2 bg-[#21262d] border-b border-[#30363d]">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={customPath || suggestedPath || ''}
+              onChange={(e) => setCustomPath(e.target.value)}
+              placeholder="文件路径..."
+              className="flex-1 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1 text-xs text-white"
+            />
+            <button
+              onClick={handleApply}
+              disabled={!displayPath}
+              className="px-2 py-1 bg-green-600 rounded text-xs text-white hover:bg-green-700 disabled:opacity-50"
+            >
+              确认
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            {suggestedPath ? '已检测到建议路径，可直接确认' : '请输入文件路径'}
+          </p>
+        </div>
+      )}
+
       <div
         className="p-3 overflow-x-auto text-sm"
         dangerouslySetInnerHTML={{ __html: highlighted }}
@@ -101,15 +171,60 @@ const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, languag
   );
 };
 
+// 从文本中提取可能的文件路径
+const extractFilePath = (text: string): string | null => {
+  // 匹配 `path/to/file.ext` 或 "path/to/file.ext" 或 'path/to/file.ext'
+  const patterns = [
+    /`([^`]+\.[a-zA-Z0-9]+)`/,
+    /"([^"]+\.[a-zA-Z0-9]+)"/,
+    /'([^']+\.[a-zA-Z0-9]+)'/,
+    /文件[：:]\s*([\w\/\.\-]+)/,
+    /file[：:]\s*([\w\/\.\-]+)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) {
+      return match[1];
+    }
+  }
+  return null;
+};
+
+interface MarkdownContentProps {
+  content: string;
+  onApplyChange?: (filePath: string, content: string) => void;
+  projectPath?: string;
+}
+
 // Markdown渲染组件
-const MarkdownContent: React.FC<{ content: string }> = ({ content }) => {
+const MarkdownContent: React.FC<MarkdownContentProps> = ({ content, onApplyChange, projectPath }) => {
   const blocks = parseCodeBlocks(content);
 
   return (
     <div className="space-y-2">
       {blocks.map((block, index) => {
         if (block.type === 'code') {
-          return <CodeBlock key={index} code={block.content} language={block.language || 'text'} />;
+          // 尝试从代码块前的文本中提取文件路径
+          const prevBlock = blocks[index - 1];
+          let suggestedPath: string | null = null;
+
+          if (prevBlock?.type === 'text') {
+            // 从最后几行提取路径
+            const lastLines = prevBlock.content.split('\n').slice(-3).join('\n');
+            suggestedPath = extractFilePath(lastLines);
+          }
+
+          return (
+            <CodeBlock
+              key={index}
+              code={block.content}
+              language={block.language || 'text'}
+              suggestedPath={suggestedPath}
+              onApplyChange={onApplyChange}
+              projectPath={projectPath}
+            />
+          );
         }
 
         // 文本处理（简化版Markdown）
@@ -167,7 +282,7 @@ const TerminalChat: React.FC<TerminalChatProps> = ({
   paradigm: initialParadigm,
   messages,
   setMessages,
-  onApplyChange,
+  onApplyChange: _onApplyChange,
   onSaveMessage,
 }) => {
   const [input, setInput] = useState('');
@@ -229,11 +344,16 @@ const TerminalChat: React.FC<TerminalChatProps> = ({
     if (!input.trim() || isProcessing) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       role: 'user',
       content: input,
       type: 'text',
     };
+
+    // 保存用户消息到会话
+    if (sessionId && onSaveMessage) {
+      onSaveMessage('user', input);
+    }
 
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
@@ -281,6 +401,10 @@ const TerminalChat: React.FC<TerminalChatProps> = ({
         if (chunk.is_done) {
           setIsProcessing(false);
           streamingMessageId.current = null;
+          // 保存AI回复到会话
+          if (sessionId && onSaveMessage) {
+            onSaveMessage('assistant', accumulatedContent);
+          }
         }
       };
 
@@ -289,6 +413,7 @@ const TerminalChat: React.FC<TerminalChatProps> = ({
         request: {
           user_input: userMessage.content,
           project_path: projectPath,
+          session_id: sessionId,
         },
         onChunk: channel,
       });
@@ -324,7 +449,7 @@ const TerminalChat: React.FC<TerminalChatProps> = ({
       setApiKey('');
 
       const systemMessage: Message = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         role: 'system',
         content: `API密钥已保存（${provider}）`,
         type: 'text',
@@ -356,7 +481,7 @@ const TerminalChat: React.FC<TerminalChatProps> = ({
 
       const output = result.stdout || result.stderr || '执行完成（无输出）';
       const outputMessage: Message = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         role: 'system',
         content: output,
         type: 'terminal',
@@ -385,7 +510,7 @@ const TerminalChat: React.FC<TerminalChatProps> = ({
       });
 
       const outputMessage: Message = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         role: 'system',
         content:
           result.exit_code === 0
@@ -402,7 +527,7 @@ const TerminalChat: React.FC<TerminalChatProps> = ({
 
   const addSystemMessage = (content: string) => {
     const message: Message = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       role: 'system',
       content,
       type: 'text',
@@ -423,7 +548,7 @@ const TerminalChat: React.FC<TerminalChatProps> = ({
       };
 
       const systemMessage: Message = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         role: 'system',
         content: `已切换到 ${paradigmNames[newParadigm]} 模式`,
         type: 'text',
@@ -549,7 +674,11 @@ const TerminalChat: React.FC<TerminalChatProps> = ({
             >
               {message.role === 'assistant' ? (
                 <>
-                  <MarkdownContent content={message.content} />
+                  <MarkdownContent
+                    content={message.content}
+                    onApplyChange={_onApplyChange}
+                    projectPath={projectPath}
+                  />
                   {message.isStreaming && (
                     <span className="inline-block w-2 h-4 bg-blue-400 ml-1 animate-pulse" />
                   )}

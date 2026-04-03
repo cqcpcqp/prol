@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { codeToHtml } from 'shiki';
 
 interface CodeViewerProps {
@@ -41,7 +41,6 @@ const CodeViewer: React.FC<CodeViewerProps> = ({ filePath, content }) => {
         setHighlightedCode(html);
       } catch (error) {
         console.error('Failed to highlight code:', error);
-        // Fallback to plain text
         setHighlightedCode(`<pre><code>${content}</code></pre>`);
       }
     };
@@ -50,12 +49,14 @@ const CodeViewer: React.FC<CodeViewerProps> = ({ filePath, content }) => {
   }, [content, filePath]);
 
   const fileName = filePath.split('/').pop() || '';
+  const lineCount = content.split('\n').length;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-[#0d1117]">
       {/* File Header */}
       <div className="h-10 flex items-center px-4 border-b border-[#30363d] bg-[#161b22]">
         <span className="text-sm text-gray-300">{fileName}</span>
+        <span className="ml-auto text-xs text-gray-500">{lineCount} 行</span>
       </div>
 
       {/* Code Content */}

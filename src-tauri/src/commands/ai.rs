@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct GenerateCodeRequest {
     pub user_input: String,
     pub project_path: String,
+    pub session_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

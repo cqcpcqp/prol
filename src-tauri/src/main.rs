@@ -14,6 +14,7 @@ mod session;
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // 初始化运行时管理器目录
             let app_handle = app.handle();
@@ -39,6 +40,11 @@ fn main() {
             commands::fs::read_file,
             commands::fs::write_file,
             commands::fs::create_directory,
+            commands::fs::create_file,
+            commands::fs::delete_file,
+            commands::fs::delete_directory,
+            commands::fs::rename_path,
+            commands::fs::file_exists,
             // 运行时命令
             commands::list_installed_runtimes,
             commands::install_runtime,

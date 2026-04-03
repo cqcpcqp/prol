@@ -1,18 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Check, FileCode } from 'lucide-react';
-import { codeToHtml } from 'shiki';
 
 interface DiffLine {
   type: 'added' | 'removed' | 'unchanged';
   lineNumber: number;
   content: string;
-}
-
-interface FileDiff {
-  path: string;
-  oldContent: string;
-  newContent: string;
-  diff: DiffLine[];
 }
 
 interface DiffViewerProps {
@@ -144,22 +136,6 @@ const DiffViewer: React.FC<DiffViewerProps> = ({
     setStats({ added, removed });
   }, [originalContent, newContent]);
 
-  const getLanguage = (path: string): string => {
-    const ext = path.split('.').pop()?.toLowerCase() || '';
-    const map: Record<string, string> = {
-      js: 'javascript',
-      ts: 'typescript',
-      tsx: 'tsx',
-      py: 'python',
-      rs: 'rust',
-      html: 'html',
-      css: 'css',
-      json: 'json',
-      md: 'markdown',
-    };
-    return map[ext] || 'text';
-  };
-
   const getLineClass = (type: DiffLine['type']) => {
     switch (type) {
       case 'added':
@@ -203,8 +179,14 @@ const DiffViewer: React.FC<DiffViewerProps> = ({
             <div>
               <h3 className="text-white font-medium">{filePath}</h3>
               <div className="flex items-center gap-3 text-sm">
-                <span className="text-green-400">+{stats.added}</span>
-                <span className="text-red-400">-{stats.removed}</span>
+                {originalContent === '' && newContent !== '' ? (
+                  <span className="text-green-400">新文件</span>
+                ) : (
+                  <>
+                    <span className="text-green-400">+{stats.added}</span>
+                    <span className="text-red-400">-{stats.removed}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>

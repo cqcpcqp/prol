@@ -14,6 +14,7 @@ pub enum Paradigm {
 }
 
 impl Paradigm {
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &'static str {
         match self {
             Paradigm::Vibe => "vibe",
@@ -22,6 +23,7 @@ impl Paradigm {
         }
     }
 
+    #[allow(dead_code)]
     pub fn display_name(&self) -> &'static str {
         match self {
             Paradigm::Vibe => "💭 Vibe",
@@ -30,6 +32,7 @@ impl Paradigm {
         }
     }
 
+    #[allow(dead_code)]
     pub fn description(&self) -> &'static str {
         match self {
             Paradigm::Vibe => "自然语言描述，AI理解意图",
@@ -251,8 +254,10 @@ impl PromptTemplate {
 }
 
 /// 项目上下文生成器
+#[allow(dead_code)]
 pub struct ProjectContextGenerator;
 
+#[allow(dead_code)]
 impl ProjectContextGenerator {
     pub fn generate(
         project_path: &str,

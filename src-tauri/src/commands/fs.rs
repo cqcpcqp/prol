@@ -85,3 +85,44 @@ pub async fn create_directory(dir_path: String) -> Result<(), String> {
         .await
         .map_err(|e| e.to_string())
 }
+
+#[command]
+pub async fn create_file(file_path: String) -> Result<(), String> {
+    // 确保父目录存在
+    if let Some(parent) = PathBuf::from(&file_path).parent() {
+        tokio::fs::create_dir_all(parent)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
+
+    // 创建空文件
+    tokio::fs::write(&file_path, "")
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[command]
+pub async fn delete_file(file_path: String) -> Result<(), String> {
+    tokio::fs::remove_file(&file_path)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[command]
+pub async fn delete_directory(dir_path: String) -> Result<(), String> {
+    tokio::fs::remove_dir_all(&dir_path)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[command]
+pub async fn rename_path(old_path: String, new_path: String) -> Result<(), String> {
+    tokio::fs::rename(&old_path, &new_path)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[command]
+pub async fn file_exists(file_path: String) -> Result<bool, String> {
+    Ok(PathBuf::from(&file_path).exists())
+}

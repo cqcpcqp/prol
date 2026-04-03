@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import FileTree from './components/FileTree';
 import CodeViewer from './components/CodeViewer';
 import TerminalChat from './components/TerminalChat';
 import DiffViewer from './components/DiffViewer';
+import SettingsModal from './components/SettingsModal';
+import WelcomeScreen from './components/WelcomeScreen';
 import { open } from '@tauri-apps/plugin-dialog';
-import { FolderOpen, Settings, Play, Plus } from 'lucide-react';
+import { Settings, Play, Plus } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 
 interface Project {
@@ -35,6 +37,17 @@ interface Message {
   isStreaming?: boolean;
 }
 
+// 后端返回的 Session 结构
+interface LoadedSession {
+  metadata: {
+    id: string;
+    title: string;
+    project_path: string;
+    paradigm: string;
+  };
+  messages: Message[];
+}
+
 function App() {
   const [project, setProject] = useState<Project | null>(null);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -48,25 +61,15 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentParadigm, setCurrentParadigm] = useState('vibe');
 
-  // 打开项目
-  const openProject = async () => {
-    const selected = await open({
-      directory: true,
-      multiple: false,
-    });
+  // 设置模态框
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    if (selected && typeof selected === 'string') {
-      const pathParts = selected.split('/');
-      const name = pathParts[pathParts.length - 1] || 'project';
-      setProject({ path: selected, name });
-
-      // 创建新会话
-      await createNewSession(selected);
-    }
-  };
+  // 文件树刷新
+  const [fileTreeKey, setFileTreeKey] = useState(0);
+  const refreshFileTree = () => setFileTreeKey((k) => k + 1);
 
   // 创建新会话
-  const createNewSession = async (projectPath: string) => {
+  const createNewSession = useCallback(async (projectPath: string) => {
     try {
       const sessionId = await invoke<string>('create_session', {
         projectPath,
@@ -84,12 +87,59 @@ function App() {
     } catch (error) {
       console.error('Failed to create session:', error);
     }
-  };
+  }, [currentParadigm]);
+
+  // 打开项目
+  const openProject = useCallback(async () => {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+      });
+
+      if (selected && typeof selected === 'string') {
+        const pathParts = selected.split('/');
+        const name = pathParts[pathParts.length - 1] || 'project';
+        setProject({ path: selected, name });
+
+        // 创建新会话
+        await createNewSession(selected);
+      }
+    } catch (error) {
+      console.error('Failed to open project:', error);
+    }
+  }, [createNewSession]);
+
+  // 键盘快捷键
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + , 打开设置
+      if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+        e.preventDefault();
+        setIsSettingsOpen(true);
+      }
+      // Ctrl/Cmd + O 打开项目
+      if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+        e.preventDefault();
+        openProject();
+      }
+      // Ctrl/Cmd + N 新建会话
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        if (project) {
+          createNewSession(project.path);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [project, openProject, createNewSession]);
 
   // 加载历史会话
   const loadSession = async (session: Session) => {
     try {
-      const loadedSession = await invoke<{ messages: Message[] }>('load_session', {
+      const loadedSession = await invoke<LoadedSession>('load_session', {
         sessionId: session.id,
       });
 
@@ -134,7 +184,11 @@ function App() {
 
   // 应用AI代码变更
   const applyAIChange = async (filePath: string, newContent: string) => {
-    const originalContent = await invoke<string>('read_file', { filePath }).catch(() => '');
+    // 检查文件是否存在
+    const exists = await invoke<boolean>('file_exists', { filePath });
+    const originalContent = exists
+      ? await invoke<string>('read_file', { filePath }).catch(() => '')
+      : '';
 
     setPendingChange({
       filePath,
@@ -148,6 +202,11 @@ function App() {
     if (!pendingChange) return;
 
     try {
+      // 检查文件是否存在
+      const exists = await invoke<boolean>('file_exists', {
+        filePath: pendingChange.filePath,
+      });
+
       await invoke('write_file', {
         filePath: pendingChange.filePath,
         content: pendingChange.newContent,
@@ -157,13 +216,20 @@ function App() {
         await loadFile(pendingChange.filePath);
       }
 
+      // 刷新文件树（如果是新文件）
+      if (!exists) {
+        refreshFileTree();
+        // 选中新创建的文件
+        setSelectedFile(pendingChange.filePath);
+      }
+
       // 记录代码变更到会话
       if (currentSessionId) {
         await invoke('record_code_change', {
           sessionId: currentSessionId,
           filePath: pendingChange.filePath,
-          changeType: 'modify',
-          description: 'AI generated modification',
+          changeType: exists ? 'modify' : 'create',
+          description: exists ? 'AI modified file' : 'AI created new file',
         });
       }
 
@@ -189,19 +255,13 @@ function App() {
 
   if (!project) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#0d1117]">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">AI IDE</h1>
-          <p className="text-gray-400 mb-8">面向产品经理的零配置开发环境</p>
-          <button
-            onClick={openProject}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            <FolderOpen size={20} />
-            打开项目
-          </button>
-        </div>
-      </div>
+      <>
+        <WelcomeScreen onOpenProject={openProject} />
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      </>
     );
   }
 
@@ -220,7 +280,11 @@ function App() {
           <button className="p-2 hover:bg-[#30363d] rounded transition-colors">
             <Plus size={18} />
           </button>
-          <button className="p-2 hover:bg-[#30363d] rounded transition-colors">
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-2 hover:bg-[#30363d] rounded transition-colors"
+            title="设置 (Ctrl+,)"
+          >
             <Settings size={18} />
           </button>
         </div>
@@ -231,6 +295,7 @@ function App() {
         {/* Left Panel - File Tree with Session List */}
         <div style={{ width: leftWidth }} className="flex-shrink-0 border-r border-[#30363d]">
           <FileTree
+            key={fileTreeKey}
             projectPath={project.path}
             onFileSelect={setSelectedFile}
             selectedFile={selectedFile}
@@ -245,7 +310,6 @@ function App() {
           className="resizer"
           onMouseDown={(e) => {
             const startX = e.clientX;
-            const startWidth = leftWidth;
 
             const handleMouseMove = (e: MouseEvent) => {
               handleResize('left', e.clientX - startX);
@@ -277,7 +341,6 @@ function App() {
           className="resizer"
           onMouseDown={(e) => {
             const startX = e.clientX;
-            const startWidth = rightWidth;
 
             const handleMouseMove = (e: MouseEvent) => {
               handleResize('right', startX - e.clientX);
@@ -319,6 +382,12 @@ function App() {
           onClose={handleRejectChange}
         />
       )}
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 }

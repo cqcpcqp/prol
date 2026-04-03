@@ -19,6 +19,7 @@ impl AIOrchestrator {
         })
     }
 
+    #[allow(dead_code)]
     pub fn with_paradigm(mut self, paradigm: Paradigm) -> Self {
         self.paradigm = paradigm;
         self
@@ -107,6 +108,7 @@ impl AIOrchestrator {
     }
 
     /// 修复代码
+    #[allow(dead_code)]
     pub async fn fix_code(
         &self,
         code: &str,
@@ -134,11 +136,13 @@ impl AIOrchestrator {
     }
 
     /// 获取当前范式
+    #[allow(dead_code)]
     pub fn current_paradigm(&self) -> &Paradigm {
         &self.paradigm
     }
 
     /// 设置范式
+    #[allow(dead_code)]
     pub fn set_paradigm(&mut self, paradigm: Paradigm) {
         self.paradigm = paradigm;
     }
@@ -149,6 +153,7 @@ impl AIOrchestrator {
 pub struct ProjectContext {
     pub path: String,
     pub primary_language: Option<String>,
+    #[allow(dead_code)]
     pub project_type: Option<String>,
     pub file_structure: Vec<String>,
 }
