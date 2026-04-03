@@ -121,3 +121,5 @@ npm run tauri dev
 - 前端代码修改后会热更新
 - Rust 代码修改后会自动重新编译
 - Tauri API 文档：https://tauri.app/reference/
+
+![alt text](158a94802fc59eeea26c14f2c6519082.png)
